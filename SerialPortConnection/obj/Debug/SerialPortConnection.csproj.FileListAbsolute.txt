@@ -1,0 +1,24 @@
+D:\My Documents\Visual Studio 2008\Projects\SerialPortConnection\SerialPortConnection\obj\Debug\ResolveAssemblyReference.cache
+D:\My Documents\Visual Studio 2008\Projects\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.Form1.resources
+D:\My Documents\Visual Studio 2008\Projects\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.Properties.Resources.resources
+D:\My Documents\Visual Studio 2008\Projects\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.csproj.GenerateResource.Cache
+D:\My Documents\Visual Studio 2008\Projects\SerialPortConnection\SerialPortConnection\bin\Debug\SerialPortConnection.exe
+D:\My Documents\Visual Studio 2008\Projects\SerialPortConnection\SerialPortConnection\bin\Debug\SerialPortConnection.pdb
+D:\My Documents\Visual Studio 2008\Projects\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.exe
+D:\My Documents\Visual Studio 2008\Projects\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.pdb
+E:\工作\Z03P\P010\蓝牙\驱动\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.exe
+E:\工作\Z03P\P010\蓝牙\驱动\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.pdb
+E:\工作\Z03P\P010\蓝牙\驱动\SerialPortConnection\SerialPortConnection\bin\Debug\SerialPortConnection.exe
+E:\工作\Z03P\P010\蓝牙\驱动\SerialPortConnection\SerialPortConnection\bin\Debug\SerialPortConnection.pdb
+E:\工作\Z03P\P010\蓝牙\驱动\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.csprojResolveAssemblyReference.cache
+E:\工作\Z03P\P010\蓝牙\驱动\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.Form1.resources
+E:\工作\Z03P\P010\蓝牙\驱动\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.Properties.Resources.resources
+E:\工作\Z03P\P010\蓝牙\驱动\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.csproj.GenerateResource.Cache
+E:\工作\Z03P\P010\GSM\有方\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.exe
+E:\工作\Z03P\P010\GSM\有方\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.pdb
+E:\工作\Z03P\P010\GSM\有方\SerialPortConnection\SerialPortConnection\bin\Debug\SerialPortConnection.exe
+E:\工作\Z03P\P010\GSM\有方\SerialPortConnection\SerialPortConnection\bin\Debug\SerialPortConnection.pdb
+E:\工作\Z03P\P010\GSM\有方\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.csprojResolveAssemblyReference.cache
+E:\工作\Z03P\P010\GSM\有方\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.Form1.resources
+E:\工作\Z03P\P010\GSM\有方\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.Properties.Resources.resources
+E:\工作\Z03P\P010\GSM\有方\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.csproj.GenerateResource.Cache
