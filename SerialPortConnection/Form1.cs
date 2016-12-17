@@ -11,26 +11,19 @@ using INIFILE;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Collections;
+using SerialPortConnection;
 
 namespace SerialPortConnection
 {
     public partial class Form1 : Form
     {
-        SerialPort sp1 = new SerialPort();
-        char[] RxBuf = new char[1000];
-        int RxLen = 0;
-        string[] ParseResult = new string[10];
-        int ParseResultNum = 0;
-        bool RxFinished = false;
-        System.Timers.Timer t = new System.Timers.Timer(100);
-        
-        //sp1.ReceivedBytesThreshold = 1;//只要有1个字符送达端口时便触发DataReceived事件 
-
+        GPRS GPRS = new GPRS();
+        //SerialPort sp1 = new SerialPort();
         public Form1()
         {
-            t.Elapsed += new System.Timers.ElapsedEventHandler(theout);
-            t.AutoReset = true;//设置是执行一次（false）还是一直执行(true)；
-            t.Enabled = true;//是否执行System.Timers.Timer.Elapsed事件；
+            //t.Elapsed += new System.Timers.ElapsedEventHandler(theout);
+            //t.AutoReset = true;//设置是执行一次（false）还是一直执行(true)；
+            //t.Enabled = true;//是否执行System.Timers.Timer.Elapsed事件；
             InitializeComponent();
         }
 
@@ -39,59 +32,6 @@ namespace SerialPortConnection
 
         }
 
-        public void Parse()
-        {
-            //string RxString = RxBuf.ToString(); System.Text.Encoding.ASCII.GetString(bs);
-            string RxString = new string(RxBuf);
-            /* 删除部分字节 */
-            RxString = RxString.Replace("\r","");
-            RxString = RxString.Replace(" ", "");
-            RxString = RxString.Replace("\n\n", "\n");
-            /* 分解字符 */
-            List <string> sArray = RxString.Split('\n').ToList();
-            for(int i = 0;i < sArray.Count; i ++)
-            {
-                if(sArray[i] != "")
-                {
-                    ParseResult[i] = sArray[i];
-                    ParseResultNum++;
-                }
-                else
-                {
-                    RxFinished = true;
-                    return;
-                }
-            }
-            sArray.
-            RxFinished = true;
-        }
-
-        public bool GPRS_Send(string Com)
-        {
-            int timeout = 0,Retry = 0 ;
-        Restart:
-            timeout = 0;
-            sp1.WriteLine(Com);
-            DateTime dt = DateTime.Now;
-            richTextBox1.Text += "----------" + dt.ToString("mm:ss ffff") + "----------" + "\r\n";
-            richTextBox1.Text += Com + "\r\n";
-            while (RxFinished == false)
-            {
-                Thread.Sleep(100);
-                if (timeout++ > 10)
-                {
-                    if(Retry++ > 4)return false;
-                    goto Restart;
-                }
-            }
-            RxFinished = false;
-            if (ParseResultNum != 0 && ParseResult[ParseResultNum - 1] == "OK")
-            {
-                ParseResultNum = 0;
-                return true;
-            }
-            return false;
-        }
 
         //加载
         private void Form1_Load(object sender, EventArgs e)
@@ -213,30 +153,31 @@ namespace SerialPortConnection
             //串口设置默认选择项
             cbSerial.SelectedIndex = 1;         //note：获得COM9口，但别忘修改
             cbBaudRate.SelectedIndex = 8;
-           // cbDataBits.SelectedIndex = 3;
-           // cbStop.SelectedIndex = 0;
-          //  cbParity.SelectedIndex = 0;
-            sp1.BaudRate = 115200;
+            // cbDataBits.SelectedIndex = 3;
+            // cbStop.SelectedIndex = 0;
+            //  cbParity.SelectedIndex = 0;
+
+            GPRS.sp1.BaudRate = 115200;
 
             Control.CheckForIllegalCrossThreadCalls = false;    //这个类中我们不检查跨线程的调用是否合法(因为.net 2.0以后加强了安全机制,，不允许在winform中直接跨线程访问控件的属性)
-            sp1.DataReceived += new SerialDataReceivedEventHandler(sp1_DataReceived);
+            GPRS.sp1.DataReceived += new SerialDataReceivedEventHandler(sp1_DataReceived);
             //sp1.ReceivedBytesThreshold = 1;
 
             //radio1.Checked = true;  //单选按钮默认是选中的
             rbRcvStr.Checked = true;
 
             //准备就绪              
-            sp1.DtrEnable = true;
-            sp1.RtsEnable = true;
+            GPRS.sp1.DtrEnable = true;
+            GPRS.sp1.RtsEnable = true;
             //设置数据读取超时为1秒
-            sp1.ReadTimeout = 1000;
+            GPRS.sp1.ReadTimeout = 1000;
 
-            sp1.Close();
+            GPRS.sp1.Close();
         }
 
         void sp1_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            if (sp1.IsOpen)     //此处可能没有必要判断是否打开串口，但为了严谨性，我还是加上了
+            if (GPRS.sp1.IsOpen)     //此处可能没有必要判断是否打开串口，但为了严谨性，我还是加上了
             {
                 //输出当前时间
                 DateTime dt = DateTime.Now;
@@ -244,28 +185,28 @@ namespace SerialPortConnection
                 //txtReceive.SelectAll();
                 //txtReceive.SelectionColor = Color.Blue;         //改变字体的颜色
                 Thread.Sleep(100);
-                RxLen = sp1.BytesToRead;
+                GPRS.RxLen = GPRS.sp1.BytesToRead;
                 //char [] byteRead = new char[RecvLen];    //BytesToRead:sp1接收的字符个数
                 if (rdSendStr.Checked)                          //'发送字符串'单选按钮
                 {
-                    for(int i = 0;i < RxLen; i ++)
+                    for(int i = 0;i < GPRS.RxLen; i ++)
                     {
-                        RxBuf[i] = (char)sp1.ReadChar();
-                        if (RxBuf[i] == '\r') continue;
-                        txtReceive.Text += RxBuf[i];
+                        GPRS.RxBuf[i] = (char)GPRS.sp1.ReadChar();
+                        if (GPRS.RxBuf[i] == '\r') continue;
+                        txtReceive.Text += GPRS.RxBuf[i];
                     }
                     //txtReceive.Text += sp1.ReadLine() + "\r\n"; //注意：回车换行必须这样写，单独使用"\r"和"\n"都不会有效果
-                    sp1.DiscardInBuffer();                      //清空SerialPort控件的Buffer 
-                    Parse();
+                    GPRS.sp1.DiscardInBuffer();                      //清空SerialPort控件的Buffer 
+                    GPRS.Parse();
                 }
                 else                                            //'发送16进制按钮'
                 {
                     try
                     {
-                        Byte[] receivedData = new Byte[sp1.BytesToRead];        //创建接收字节数组
-                        sp1.Read(receivedData, 0, receivedData.Length);         //读取数据
+                        Byte[] receivedData = new Byte[GPRS.sp1.BytesToRead];        //创建接收字节数组
+                        GPRS.sp1.Read(receivedData, 0, receivedData.Length);         //读取数据
                         //string text = sp1.Read();   //Encoding.ASCII.GetString(receivedData);
-                        sp1.DiscardInBuffer();                                  //清空SerialPort控件的Buffer
+                        GPRS.sp1.DiscardInBuffer();                                  //清空SerialPort控件的Buffer
                         //这是用以显示字符串
                         //    string strRcv = null;
                         //    for (int i = 0; i < receivedData.Length; i++ )
@@ -308,7 +249,7 @@ namespace SerialPortConnection
                 tmSend.Enabled = false;
             }
 
-            if (!sp1.IsOpen) //如果没打开
+            if (!GPRS.sp1.IsOpen) //如果没打开
             {
                 MessageBox.Show("请先打开串口！", "Error");
                 return;
@@ -366,11 +307,11 @@ namespace SerialPortConnection
 
                    ii++;    
                 }
-                sp1.Write(byteBuffer, 0, byteBuffer.Length);
+                GPRS.sp1.Write(byteBuffer, 0, byteBuffer.Length);
             }
             else		//以字符串形式发送时 
             {
-                sp1.WriteLine(txtSend.Text);    //写入数据
+                GPRS.sp1.WriteLine(txtSend.Text);    //写入数据
             }
         }
 
@@ -378,13 +319,13 @@ namespace SerialPortConnection
         private void btnSwitch_Click(object sender, EventArgs e)
         {
             //serialPort1.IsOpen
-            if (!sp1.IsOpen)
+            if (!GPRS.sp1.IsOpen)
             {
                 try
                 {
                     //设置串口号
                     string serialName = cbSerial.SelectedItem.ToString();
-                    sp1.PortName = serialName;
+                    GPRS.sp1.PortName = serialName;
 
                     //设置各“串口设置”
                     string strBaudRate = cbBaudRate.Text;
@@ -393,18 +334,18 @@ namespace SerialPortConnection
                     Int32 iBaudRate = Convert.ToInt32(strBaudRate);
                     Int32 iDateBits = Convert.ToInt32(strDateBits);
 
-                    sp1.BaudRate = iBaudRate;       //波特率
-                    sp1.DataBits = iDateBits;       //数据位
+                    GPRS.sp1.BaudRate = iBaudRate;       //波特率
+                    GPRS.sp1.DataBits = iDateBits;       //数据位
                     switch (cbStop.Text)            //停止位
                     {
                         case "1":
-                            sp1.StopBits = StopBits.One;
+                            GPRS.sp1.StopBits = StopBits.One;
                             break;
                         case "1.5":
-                            sp1.StopBits = StopBits.OnePointFive;
+                            GPRS.sp1.StopBits = StopBits.OnePointFive;
                             break;
                         case "2":
-                            sp1.StopBits = StopBits.Two;
+                            GPRS.sp1.StopBits = StopBits.Two;
                             break;
                         default:
                             MessageBox.Show("Error：参数不正确!", "Error");
@@ -413,29 +354,29 @@ namespace SerialPortConnection
                     switch (cbParity.Text)             //校验位
                     {
                         case "无":
-                            sp1.Parity = Parity.None;
+                            GPRS.sp1.Parity = Parity.None;
                             break;
                         case "奇校验":
-                            sp1.Parity = Parity.Odd;
+                            GPRS.sp1.Parity = Parity.Odd;
                             break;
                         case "偶校验":
-                            sp1.Parity = Parity.Even;
+                            GPRS.sp1.Parity = Parity.Even;
                             break;
                         default:
                             MessageBox.Show("Error：参数不正确!", "Error");
                             break;
                     }
 
-                    if (sp1.IsOpen == true)//如果打开状态，则先关闭一下
+                    if (GPRS.sp1.IsOpen == true)//如果打开状态，则先关闭一下
                     {
-                        sp1.Close();
+                        GPRS.sp1.Close();
                     }
                     //状态栏设置
-                    tsSpNum.Text = "串口号：" + sp1.PortName + "|";
-                    tsBaudRate.Text = "波特率：" + sp1.BaudRate + "|";
-                    tsDataBits.Text = "数据位：" + sp1.DataBits + "|";
-                    tsStopBits.Text = "停止位：" + sp1.StopBits + "|";
-                    tsParity.Text = "校验位：" + sp1.Parity + "|";
+                    tsSpNum.Text = "串口号：" + GPRS.sp1.PortName + "|";
+                    tsBaudRate.Text = "波特率：" + GPRS.sp1.BaudRate + "|";
+                    tsDataBits.Text = "数据位：" + GPRS.sp1.DataBits + "|";
+                    tsStopBits.Text = "停止位：" + GPRS.sp1.StopBits + "|";
+                    tsParity.Text = "校验位：" + GPRS.sp1.Parity + "|";
 
                     //设置必要控件不可用
                     cbSerial.Enabled = false;
@@ -444,7 +385,7 @@ namespace SerialPortConnection
                     cbStop.Enabled = false;
                     cbParity.Enabled = false;
 
-                    sp1.Open();     //打开串口
+                    GPRS.sp1.Open();     //打开串口
                     btnSwitch.Text = "关闭串口";
                 }
                 catch (System.Exception ex)
@@ -470,7 +411,7 @@ namespace SerialPortConnection
                 cbStop.Enabled = true;
                 cbParity.Enabled = true;
 
-                sp1.Close();                    //关闭串口
+                GPRS.sp1.Close();                    //关闭串口
                 btnSwitch.Text = "打开串口";
                 tmSend.Enabled = false;         //关闭计时器
             }
@@ -492,7 +433,7 @@ namespace SerialPortConnection
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             INIFILE.Profile.SaveProfile();
-            sp1.Close();
+            GPRS.sp1.Close();
         }
 
         private void txtSend_KeyPress(object sender, KeyPressEventArgs e)
@@ -618,19 +559,10 @@ namespace SerialPortConnection
             Thread th = new Thread(new ThreadStart(ThreadMethod)); //也可简写为new Thread(ThreadMethod);                
             th.Start(); //启动线程 
         }
+
         public void ThreadMethod()
         {
-            if (GPRS_Send("ATI") != true) return;
-            Thread.Sleep(100);
-            if (GPRS_Send("AT+CPAS") == true) { if (ParseResult[1] != "+CPAS:0") MessageBox.Show("Not ready");; }
-            Thread.Sleep(100);
-            if (GPRS_Send("AT+CGREG=1") != true) return;
-            Thread.Sleep(100);
-            if (GPRS_Send("AT+CSQ") != true) return;
-            Thread.Sleep(100);
-            //if (GPRS_Send("AT+PING=119.75.217.109") == true) MessageBox.Show("OK");
-            if (GPRS_Send(" AT$MYNETACT=0,1") != true) return;
-            Thread.Sleep(100);
+            GPRS.Init();
             /*
              * AT$MYNETCON=0,"CFGP",1024
              * AT$MYNETACT=0,1
@@ -638,6 +570,8 @@ namespace SerialPortConnection
              * AT+PING=119.75.217.109
              */
         }
+        
+
     }
 
 }
