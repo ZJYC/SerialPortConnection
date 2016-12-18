@@ -5,9 +5,19 @@ using System.Text;
 using System.IO.Ports;
 using System.Threading;
 using System.Windows.Forms;
+//using System.Random;
 
 namespace SerialPortConnection
 {
+    public struct TestResult_t
+    {
+        public DateTime TestBeginTime;
+        public int TestDuring;
+        public int TestCSQ;
+        public int Result;
+        public int PayloadLen;
+        public float Match; 
+    }
     public enum GPRS_Res
     {
         OK = 0,
@@ -23,11 +33,18 @@ namespace SerialPortConnection
         System.Timers.Timer t = new System.Timers.Timer(100);
         string CPASx = "";
         public SerialPort sp1 = new SerialPort();
+        public char[] TestPayload = new char[2000];
+        public bool TransferMode = false;
+        public int TransferLen = 0;
+        public int TestCounter = 0;
+        public TestResult_t []TestResult = new TestResult_t[10000];
+        Random RD = new Random();
         /* 对收到的命令进行解析 */
         public void Parse()
         {
             string RxString = new string(RxBuf);
             //string RxString = "\r\n+CPAS:5\r\n";
+            //string RxString = "+CSQ: 20, 99";
             RxString = RxString.Replace(" ", "");
             RxString = RxString.Replace("\n\r\n", "\n");
             RxString = RxString.Replace("\r\n", "\n");
@@ -57,13 +74,14 @@ namespace SerialPortConnection
         private GPRS_Res SendCommand(string Command,int Index,string Match)
         {
             int timeout = 0, Retry = 0,NotMatch = 0;
+            sp1.DiscardInBuffer();
             Restart:
             timeout = 0;
             sp1.WriteLine(Command);
             while (RxFinished == false)
             {
-                Thread.Sleep(200);
-                if (timeout++ > 5)
+                Thread.Sleep(500);
+                if (timeout++ > 8)
                 {
                     if (Retry++ > 4) return GPRS_Res.FALSE;
                     goto Restart;
@@ -72,7 +90,7 @@ namespace SerialPortConnection
             RxFinished = false;
             /* 收到串口数据 */
             if (Index < ParseResultNum && ParseResult[Index] == Match) return GPRS_Res.OK;
-            MessageBox.Show("发送命令："+ Command + "结果不对");
+            //MessageBox.Show("发送命令："+ Command + "结果不对");
             if (++NotMatch < 2) goto Restart;
             return GPRS_Res.FALSE;
         }
@@ -80,14 +98,18 @@ namespace SerialPortConnection
         public GPRS_Res Init()
         {
             ATE0();
-            ATI();
-            AT_CCID();
-            AT_CPAS();
-            AT_CSQ();
-            AT_CGREG_0();
             AT_CGREG_1();
             AT_MYNETACT();
-            AT_PING();
+            AT_NETCREATE();
+            GPRS_TestOnce(0);
+            
+            //AT_CCID();
+            //AT_CPAS();
+            //AT_CSQ();
+            //AT_CGREG_0();
+            //AT_CGREG_1();
+            //AT_MYNETACT();
+            //AT_PING();
             return GPRS_Res.OK;
         }
         public GPRS_Res ATI()
@@ -100,7 +122,7 @@ namespace SerialPortConnection
         }
         public GPRS_Res ATE0()
         {
-            if (SendCommand("ATE0",0,"OK") == GPRS_Res.OK)
+            if (SendCommand("ATE0",1,"OK") == GPRS_Res.OK)
             {
 
             }
@@ -108,9 +130,9 @@ namespace SerialPortConnection
         }
         public GPRS_Res AT_CCID()
         {
-            if (SendCommand("AT+CCID", 1, "OK") == GPRS_Res.OK)
+            if (SendCommand("AT+CCID", 1, "OK") != GPRS_Res.OK)
             {
-
+                MessageBox.Show("没有SIM卡？？");
             }
             return GPRS_Res.OK;
         }
@@ -148,19 +170,82 @@ namespace SerialPortConnection
         }
         public GPRS_Res AT_MYNETACT()
         {
-            if (SendCommand("AT$MYNETACT=0,1", 1, "OK") == GPRS_Res.OK)
+            if (SendCommand("AT$MYNETACT=0,1",0, "OK") == GPRS_Res.OK)
             {
 
             }
             return GPRS_Res.OK;
         }
+        public GPRS_Res AT_NETCREATE()
+        {
+            if (SendCommand("AT$MYNETCREATE=0,0,0,\"124.128.34.76\",6666", 0, "CONNECT") != GPRS_Res.OK)
+            {
+                MessageBox.Show("数据透传开启失败");
+            }
+            return GPRS_Res.OK;
+        }
+        public int GetCSQ()
+        {
+            if(SendCommand("AT+CSQ", 1, "OK") == GPRS_Res.OK)
+            {
+                char[] ArrayCSQ = new char[2];
+                ArrayCSQ[0] = ParseResult[0][5];
+                ArrayCSQ[1] = ParseResult[0][6];
+                //string ParseResult[0]
+                string StrCSQ = new string(ArrayCSQ);
+                int IntCSQ = Convert.ToInt16(StrCSQ);
+                return IntCSQ;
+            }
+            return 0;
+        }
+        //AT$MYIPFILTER=0,1,"124.128.34.76","255.255.255.255"
+        //AT$MYNETOPEN=0
+        //AT$MYNETCREATE=0,0,0,"124.128.34.76",6666
         public GPRS_Res AT_PING()
         {
             if (SendCommand("AT+PING=119.75.217.109", 0, "OK") == GPRS_Res.OK)
             {
-
             }
             return GPRS_Res.OK;
+        }
+        public int GPRS_GeneratePayload()
+        {
+            //int Len = RD.Next(50,1460);
+            int Len = 500;
+            for(int i = 0;i < Len;i ++)
+            {
+                //TestPayload[i] = (char)RD.Next(0,255);
+                TestPayload[i] = 'A';
+            }
+            TestPayload[0] = (char)(Len / 256);
+            TestPayload[1] = (char)(Len % 256);
+            return Len;
+        }
+        public GPRS_Res GPRS_TestOnce(int Number)
+        {
+            TransferMode = true;
+            //TestResult[Number].TestCSQ = GetCSQ();
+            TestResult[Number].TestBeginTime = DateTime.Now;
+            TransferLen = TestResult[Number].PayloadLen = GPRS_GeneratePayload();
+            sp1.DiscardInBuffer();
+            sp1.Write(TestPayload, 0, TestResult[Number].PayloadLen);
+            RxFinished = false;
+            
+            int Retry = 10;
+            while (--Retry != 0)
+            {
+                if (RxFinished != true)
+                {
+                    Thread.Sleep(1000);
+                }
+                else
+                {
+                    TransferMode = false;
+                    return GPRS_Res.OK;
+                }
+            }
+            TransferMode = false;
+            return GPRS_Res.FALSE;
         }
     }
 }

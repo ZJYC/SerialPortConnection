@@ -416,6 +416,7 @@
             // 
             this.txtReceive.BackColor = System.Drawing.SystemColors.ControlLightLight;
             this.txtReceive.Font = new System.Drawing.Font("Consolas", 6.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtReceive.ForeColor = System.Drawing.Color.MidnightBlue;
             this.txtReceive.Location = new System.Drawing.Point(16, 20);
             this.txtReceive.Name = "txtReceive";
             this.txtReceive.ReadOnly = true;

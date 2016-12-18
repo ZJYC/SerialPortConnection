@@ -18,6 +18,9 @@ namespace SerialPortConnection
     public partial class Form1 : Form
     {
         GPRS GPRS = new GPRS();
+        char[] TestPayloadCopy = new char[2000];
+        int TestPayloadCopyIndex = 0;
+        private List<byte> buffer = new List<byte>(4096);
         //SerialPort sp1 = new SerialPort();
         public Form1()
         {
@@ -151,7 +154,7 @@ namespace SerialPortConnection
             }
 
             //串口设置默认选择项
-            cbSerial.SelectedIndex = 1;         //note：获得COM9口，但别忘修改
+            //cbSerial.SelectedIndex = 1;         //note：获得COM9口，但别忘修改
             cbBaudRate.SelectedIndex = 8;
             // cbDataBits.SelectedIndex = 3;
             // cbStop.SelectedIndex = 0;
@@ -166,11 +169,14 @@ namespace SerialPortConnection
             //radio1.Checked = true;  //单选按钮默认是选中的
             rbRcvStr.Checked = true;
 
-            //准备就绪              
-            GPRS.sp1.DtrEnable = true;
-            GPRS.sp1.RtsEnable = true;
+            //准备就绪
+            GPRS.sp1.ReceivedBytesThreshold = 1;
+            GPRS.sp1.ReadBufferSize = 20480;
+            GPRS.sp1.WriteBufferSize = 20480;
+            GPRS.sp1.DtrEnable = false;
+            GPRS.sp1.RtsEnable = false;
             //设置数据读取超时为1秒
-            GPRS.sp1.ReadTimeout = 1000;
+            GPRS.sp1.ReadTimeout = 2000;
 
             GPRS.sp1.Close();
         }
@@ -181,62 +187,58 @@ namespace SerialPortConnection
             {
                 //输出当前时间
                 DateTime dt = DateTime.Now;
-                txtReceive.Text += "----------"+dt.ToString("mm:ss ffff") + "----------"+"\r\n";
-                //txtReceive.SelectAll();
-                //txtReceive.SelectionColor = Color.Blue;         //改变字体的颜色
-                Thread.Sleep(100);
-                GPRS.RxLen = GPRS.sp1.BytesToRead;
+                txtReceive.Text += "----------" + dt.ToString("mm:ss ffff") + "----------" + "\r\n";
+                if (GPRS.TransferMode == false) Thread.Sleep(100);
+                if (GPRS.TransferMode == true) Thread.Sleep(100);
+                
                 //char [] byteRead = new char[RecvLen];    //BytesToRead:sp1接收的字符个数
-                if (rdSendStr.Checked)                          //'发送字符串'单选按钮
+                if (GPRS.TransferMode == false)
                 {
-                    for(int i = 0;i < GPRS.RxLen; i ++)
+                    GPRS.RxLen = GPRS.sp1.BytesToRead;
+                    if (rdSendStr.Checked)                          //'发送字符串'单选按钮
                     {
-                        GPRS.RxBuf[i] = (char)GPRS.sp1.ReadChar();
-                        if (GPRS.RxBuf[i] == '\r') continue;
-                        txtReceive.Text += GPRS.RxBuf[i];
-                    }
-                    //txtReceive.Text += sp1.ReadLine() + "\r\n"; //注意：回车换行必须这样写，单独使用"\r"和"\n"都不会有效果
-                    GPRS.sp1.DiscardInBuffer();                      //清空SerialPort控件的Buffer 
-                    GPRS.Parse();
-                }
-                else                                            //'发送16进制按钮'
-                {
-                    try
-                    {
-                        Byte[] receivedData = new Byte[GPRS.sp1.BytesToRead];        //创建接收字节数组
-                        GPRS.sp1.Read(receivedData, 0, receivedData.Length);         //读取数据
-                        //string text = sp1.Read();   //Encoding.ASCII.GetString(receivedData);
-                        GPRS.sp1.DiscardInBuffer();                                  //清空SerialPort控件的Buffer
-                        //这是用以显示字符串
-                        //    string strRcv = null;
-                        //    for (int i = 0; i < receivedData.Length; i++ )
-                        //    {
-                        //        strRcv += ((char)Convert.ToInt32(receivedData[i])) ;
-                        //    }
-                        //    txtReceive.Text += strRcv + "\r\n";             //显示信息
-                        //}
-                        string strRcv = null;
-                        //int decNum = 0;//存储十进制
-                        for (int i = 0; i < receivedData.Length; i++) //窗体显示
+                        for (int i = 0; i < GPRS.RxLen; i++)
                         {
-                          
-                            strRcv += receivedData[i].ToString("X2");  //16进制显示
+                            GPRS.RxBuf[i] = (char)GPRS.sp1.ReadChar();
+                            if (GPRS.RxBuf[i] == '\r') continue;
+                            txtReceive.Text += GPRS.RxBuf[i];
                         }
-                        txtReceive.Text += strRcv + "\r\n";
-                    }
-                    catch (System.Exception ex)
-                    {
-                        MessageBox.Show(ex.Message, "出错提示");
-                        txtSend.Text = "";
+                        //txtReceive.Text += sp1.ReadLine() + "\r\n"; //注意：回车换行必须这样写，单独使用"\r"和"\n"都不会有效果
+                        GPRS.sp1.DiscardInBuffer();                      //清空SerialPort控件的Buffer 
+                        GPRS.Parse();
                     }
                 }
-            }
-            else
-            {
-                MessageBox.Show("请打开某个串口", "错误提示");
+                if (GPRS.TransferMode == true)
+                {
+                    int Len = GPRS.sp1.BytesToRead;
+                    txtReceive.Text += Len.ToString() + "\r\n";
+                    byte[] Buff = new byte[Len];
+                    GPRS.sp1.Read(Buff, 0, Len);
+                    //buffer.AddRange(Buff);
+                    //GPRS.sp1.DiscardInBuffer();
+                    if (buffer.Count == GPRS.TransferLen)
+                    {
+                        int MatchCounter = 0;
+                        for (int i = 0; i < GPRS.TransferLen; i++)
+                        {
+                            if (GPRS.TestPayload[i] != buffer[i])
+                            {
+                                continue;
+                            }
+                            MatchCounter++;
+                        }
+                        /* 记录测试用时 */
+                        GPRS.TestResult[GPRS.TestCounter].TestDuring = DateTime.Now.Millisecond - GPRS.TestResult[GPRS.TestCounter].TestBeginTime.Millisecond;
+                        GPRS.TestResult[GPRS.TestCounter].Result = (MatchCounter == GPRS.TransferLen ? 'T' : 'F');
+                        GPRS.TestResult[GPRS.TestCounter].Match = (float)(MatchCounter * 1.0 / GPRS.TransferLen);
+                        GPRS.RxFinished = true;
+
+                        GPRS.sp1.DiscardInBuffer();
+                    }
+
+                }
             }
         }
-
         //发送按钮
         private void btnSend_Click(object sender, EventArgs e)
         {

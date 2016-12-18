@@ -30,3 +30,11 @@ C:\GitHub\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnecti
 C:\GitHub\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.csproj.GenerateResource.Cache
 C:\GitHub\SerialPortConnection\SerialPortConnection\bin\Debug\SerialPortConnection.exe
 C:\GitHub\SerialPortConnection\SerialPortConnection\bin\Debug\SerialPortConnection.pdb
+C:\Users\Zhaojingyangchun\Documents\GitHub\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.exe
+C:\Users\Zhaojingyangchun\Documents\GitHub\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.pdb
+C:\Users\Zhaojingyangchun\Documents\GitHub\SerialPortConnection\SerialPortConnection\bin\Debug\SerialPortConnection.exe
+C:\Users\Zhaojingyangchun\Documents\GitHub\SerialPortConnection\SerialPortConnection\bin\Debug\SerialPortConnection.pdb
+C:\Users\Zhaojingyangchun\Documents\GitHub\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.csprojResolveAssemblyReference.cache
+C:\Users\Zhaojingyangchun\Documents\GitHub\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.Form1.resources
+C:\Users\Zhaojingyangchun\Documents\GitHub\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.Properties.Resources.resources
+C:\Users\Zhaojingyangchun\Documents\GitHub\SerialPortConnection\SerialPortConnection\obj\Debug\SerialPortConnection.csproj.GenerateResource.Cache
