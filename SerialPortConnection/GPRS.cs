@@ -9,6 +9,8 @@ using System.Windows.Forms;
 
 namespace SerialPortConnection
 {
+    /* 测试结果(序列化用于保存) */
+    [Serializable]
     public struct TestResult_t
     {
         public DateTime TestBeginTime;
@@ -25,19 +27,24 @@ namespace SerialPortConnection
     };
     public class GPRS
     {
+        /* 用以接收串口数据 */
         public char[] RxBuf = new char[1000];
         public int RxLen = 0;
+        /* 用以解析串口命令 */
         public string[] ParseResult = new string[100];
         public int ParseResultNum = 0;
+        /* 标明串口接收一帧完成 */
         public bool RxFinished = false;
         System.Timers.Timer t = new System.Timers.Timer(100);
-        string CPASx = "";
+        /* 串口初 */
         public SerialPort sp1 = new SerialPort();
+        /* 测试相关 */
         public char[] TestPayload = new char[2000];
         public bool TransferMode = false;
         public int TransferLen = 0;
         public int TestCounter = 0;
         public TestResult_t []TestResult = new TestResult_t[10000];
+        /* 随机数生成 */
         Random RD = new Random();
         /* 对收到的命令进行解析 */
         public void Parse()
@@ -45,6 +52,7 @@ namespace SerialPortConnection
             string RxString = new string(RxBuf);
             //string RxString = "\r\n+CPAS:5\r\n";
             //string RxString = "+CSQ: 20, 99";
+            /* 删除所有空格 */
             RxString = RxString.Replace(" ", "");
             RxString = RxString.Replace("\n\r\n", "\n");
             RxString = RxString.Replace("\r\n", "\n");
@@ -71,9 +79,17 @@ namespace SerialPortConnection
         }
 
         /* 向GPRS模块发送指令 */
+        /// <summary>
+        /// 向串口发送指令并简单判断应答，结果保存在ParseResult一共调用者进一步分析
+        /// </summary>
+        /// <param name="Command"></param>发送的命令，自动加换行
+        /// <param name="Index"></param>返回字串中带匹配项的索引
+        /// <param name="Match"></param>匹配项
+        /// <returns></returns>
         private GPRS_Res SendCommand(string Command,int Index,string Match)
         {
             int timeout = 0, Retry = 0,NotMatch = 0;
+            /* 释放串口内存 */
             sp1.DiscardInBuffer();
             Restart:
             timeout = 0;
@@ -88,13 +104,16 @@ namespace SerialPortConnection
                 }
             }
             RxFinished = false;
-            /* 收到串口数据 */
+            /* 到此我们收到串口数据 */
             if (Index < ParseResultNum && ParseResult[Index] == Match) return GPRS_Res.OK;
-            //MessageBox.Show("发送命令："+ Command + "结果不对");
+            /* 自动尝试2次 */
             if (++NotMatch < 2) goto Restart;
             return GPRS_Res.FALSE;
         }
-
+        /// <summary>
+        /// GPRS初始化
+        /// </summary>
+        /// <returns></returns>
         public GPRS_Res Init()
         {
             ATE0();
@@ -184,6 +203,10 @@ namespace SerialPortConnection
             }
             return GPRS_Res.OK;
         }
+        /// <summary>
+        /// 获取当前的信号量
+        /// </summary>
+        /// <returns></returns>返回信号量
         public int GetCSQ()
         {
             if(SendCommand("AT+CSQ", 1, "OK") == GPRS_Res.OK)
@@ -208,6 +231,10 @@ namespace SerialPortConnection
             }
             return GPRS_Res.OK;
         }
+        /// <summary>
+        /// 产生测试数据<随机长度并且随机数值>
+        /// </summary>
+        /// <returns></returns>测试数据长度
         public int GPRS_GeneratePayload()
         {
             //int Len = RD.Next(50,1460);
@@ -215,12 +242,18 @@ namespace SerialPortConnection
             for(int i = 0;i < Len;i ++)
             {
                 //TestPayload[i] = (char)RD.Next(0,255);
+                /* 为了自测.... */
                 TestPayload[i] = 'A';
             }
             TestPayload[0] = (char)(Len / 256);
             TestPayload[1] = (char)(Len % 256);
             return Len;
         }
+        /// <summary>
+        /// 测试一次
+        /// </summary>
+        /// <param name="Number"></param>当前测试编号
+        /// <returns></returns>
         public GPRS_Res GPRS_TestOnce(int Number)
         {
             TransferMode = true;
@@ -230,7 +263,7 @@ namespace SerialPortConnection
             sp1.DiscardInBuffer();
             sp1.Write(TestPayload, 0, TestResult[Number].PayloadLen);
             RxFinished = false;
-            
+            /* 等待返回 */
             int Retry = 10;
             while (--Retry != 0)
             {

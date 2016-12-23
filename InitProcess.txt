@@ -1,0 +1,71 @@
+
+
+#关回显
+>   ATE0
+<   ATE0
+    OK
+#我也不知道
+>   AT+CGREG=1
+<   OK
+
+#开网络
+>   AT$MYNETACT=0,1
+<   OK
+    $MYURCACT: 0,1,"10.98.28.136"
+    /* IP地址不固定 */
+
+#连接网络
+>   AT$MYNETCREATE=0,0,0,"124.128.34.76",6666
+#成功
+<   CONNECT
+#断开
+>   NO CARRIER
+
+/* 然后就可以进行数据透传了，发送数据会直接通过TCP发送到服务器 */
+
+
+非透传模式：
+
+set param for Data transfer
+
+AT$MYNETSRV=0,0,0,0,"124.128.34.76:6666"
+
+41 54 24 4D 59 4E 45 54 53 52 56 3D 30 2C 30 2C 30 2C 30 2C 22 31 32 34 2E 31 32 38 2E 33 34 2E 37 36 3A 36 36 36 36 22 0D 0A 
+
+open the service
+
+AT$MYNETOPEN=0
+
+41 54 24 4D 59 4E 45 54 4F 50 45 4E 3D 30 0D 0A
+
+
+write data to socket
+>   AT$MYNETWRITE=0,10
+
+41 54 24 4D 59 4E 45 54 57 52 49 54 45 3D 30 2C 31 30 0D 0A 
+
+<   $MYNETWRITE: 0,10
+>   00 08 01 02 03 04 05 06 07 08 0D 0A
+<   OK
+
+read data from socket
+>   AT$MYNETREAD=0,2048
+
+41 54 24 4D 59 4E 45 54 52 45 41 44 3D 30 2C 32 30 34 38 0D 0A 
+
+<   "$MYNETREAD: 0,0"
+<   "OK"
+
+OR
+
+>   AT$MYNETREAD=0,2048
+<   $MYNETREAD: 0,10
+<   1234567890
+<   OK
+
+close socket
+
+>   AT$MYNETCLOSE=0
+<   0K
+
+
